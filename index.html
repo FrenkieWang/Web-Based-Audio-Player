@@ -78,6 +78,71 @@
           </label>
           <button id="notchBtn">Apply</button>
         </div>
+
+        <div class="filter-card">
+          <h3>low-shelf</h3>
+          <label>
+            Frequency
+            <input id="lowShelfFreq" type="range" min="50" max="10000" value="500">
+            <span id="lowShelfValue">500 Hz</span>
+          </label>
+          <label>
+            Gain
+            <input id="lowShelfGain" type="range" min="-20" max="20" value="0">
+            <span id="lowShelfGainValue">0 dB</span>
+          </label>
+          <button id="lowShelfBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>high-shelf</h3>
+          <label>
+            Frequency
+            <input id="highShelfFreq" type="range" min="1000" max="16000" value="5000">
+            <span id="highShelfValue">5000 Hz</span>
+          </label>
+          <label>
+            Gain
+            <input id="highShelfGain" type="range" min="-20" max="20" value="0">
+            <span id="highShelfGainValue">0 dB</span>
+          </label>
+          <button id="highShelfBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>peaking</h3>
+          <label>
+            Frequency
+            <input id="peakingFreq" type="range" min="50" max="12000" value="2000">
+            <span id="peakingValue">2000 Hz</span>
+          </label>
+          <label>
+            Gain
+            <input id="peakingGain" type="range" min="-20" max="20" value="0">
+            <span id="peakingGainValue">0 dB</span>
+          </label>
+          <label>
+            Q
+            <input id="peakingQ" type="range" min="1" max="30" value="5">
+            <span id="peakingQValue">5</span>
+          </label>
+          <button id="peakingBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>all-pass</h3>
+          <label>
+            Frequency
+            <input id="allPassFreq" type="range" min="50" max="12000" value="2000">
+            <span id="allPassValue">2000 Hz</span>
+          </label>
+          <label>
+            Q
+            <input id="allPassQ" type="range" min="1" max="30" value="5">
+            <span id="allPassQValue">5</span>
+          </label>
+          <button id="allPassBtn">Apply</button>
+        </div>
       </div>
     </section>
 

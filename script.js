@@ -45,6 +45,43 @@ const filters = {
     value: document.getElementById("notchValue"),
     q: document.getElementById("notchQ"),
     qValue: document.getElementById("notchQValue")
+  },
+  lowShelf: {
+    type: "lowshelf",
+    button: document.getElementById("lowShelfBtn"),
+    freq: document.getElementById("lowShelfFreq"),
+    value: document.getElementById("lowShelfValue"),
+    gain: document.getElementById("lowShelfGain"),
+    gainValue: document.getElementById("lowShelfGainValue")
+  },
+
+  highShelf: {
+    type: "highshelf",
+    button: document.getElementById("highShelfBtn"),
+    freq: document.getElementById("highShelfFreq"),
+    value: document.getElementById("highShelfValue"),
+    gain: document.getElementById("highShelfGain"),
+    gainValue: document.getElementById("highShelfGainValue")
+  },
+
+  peaking: {
+    type: "peaking",
+    button: document.getElementById("peakingBtn"),
+    freq: document.getElementById("peakingFreq"),
+    value: document.getElementById("peakingValue"),
+    gain: document.getElementById("peakingGain"),
+    gainValue: document.getElementById("peakingGainValue"),
+    q: document.getElementById("peakingQ"),
+    qValue: document.getElementById("peakingQValue")
+  },
+
+  allPass: {
+    type: "allpass",
+    button: document.getElementById("allPassBtn"),
+    freq: document.getElementById("allPassFreq"),
+    value: document.getElementById("allPassValue"),
+    q: document.getElementById("allPassQ"),
+    qValue: document.getElementById("allPassQValue")
   }
 };
 
@@ -112,6 +149,16 @@ Object.keys(filters).forEach((key) => {
     });
   }
 
+  if (filter.gain) {
+    filter.gain.addEventListener("input", () => {
+      filter.gainValue.textContent = `${filter.gain.value} dB`;
+
+      if (activeFilterName === key && activeFilter) {
+        activeFilter.gain.value = Number(filter.gain.value);
+      }
+    });
+  }
+
   filter.button.addEventListener("click", () => {
     setupAudioContext();
 
@@ -154,6 +201,10 @@ function applyFilter(key) {
 
   if (filterConfig.q) {
     activeFilter.Q.value = Number(filterConfig.q.value);
+  }
+
+  if (filterConfig.gain) {
+    activeFilter.gain.value = Number(filterConfig.gain.value);
   }
 
   source.disconnect();
