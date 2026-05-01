@@ -516,7 +516,7 @@ function rebuildAudioGraph() {
 
   currentNode = applyEffects(currentNode);
 
-  if (pitchEnabled && pitchSemitones !== 0) {
+  if (pitchEnabled) {
     if (!pitchShiftNode) {
       pitchShiftNode = new Tone.PitchShift({
         pitch: pitchSemitones,
