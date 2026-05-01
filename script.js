@@ -22,6 +22,30 @@ let enabledEffects = {};
 let lfoNodes = [];
 let isResetting = false;
 
+// Default values for all filters and effects
+const defaultValues = {
+  // Filters
+  lowPass: { freq: 1000 },
+  highPass: { freq: 800 },
+  bandPass: { freq: 1500, q: 5 },
+  notch: { freq: 1000, q: 0.1 },
+  lowShelf: { freq: 500, gain: 0 },
+  highShelf: { freq: 5000, gain: 0 },
+  peaking: { freq: 2000, gain: 0, q: 5 },
+  allPass: { freq: 2000, q: 5 },
+  // Effects
+  pan: 0,
+  delay: 0.3,
+  reverb: 0.4,
+  distortion: 300,
+  compressor: -24,
+  phaser: 1,
+  flanger: 0.5,
+  chorus: 1.5,
+  tremolo: 5,
+  vibrato: 5
+};
+
 const filters = {
   lowPass: {
     type: "lowpass",
@@ -683,6 +707,7 @@ resetBtn.addEventListener("click", () => {
   stopLFOs();
   updateFilterButtons();
   updateEffectButtons();
+  resetSliderValues(); // Reset all slider values to default
 
   if (audioContext) {
     rebuildAudioGraph();
@@ -700,6 +725,79 @@ resetBtn.addEventListener("click", () => {
     isResetting = false;
   }, 0);
 });
+
+// Function to reset all slider values to default
+function resetSliderValues() {
+  // Reset filter sliders
+  filters.lowPass.freq.value = defaultValues.lowPass.freq;
+  filters.lowPass.value.textContent = defaultValues.lowPass.freq + " Hz";
+
+  filters.highPass.freq.value = defaultValues.highPass.freq;
+  filters.highPass.value.textContent = defaultValues.highPass.freq + " Hz";
+
+  filters.bandPass.freq.value = defaultValues.bandPass.freq;
+  filters.bandPass.value.textContent = defaultValues.bandPass.freq + " Hz";
+  filters.bandPass.q.value = defaultValues.bandPass.q;
+  filters.bandPass.qValue.textContent = defaultValues.bandPass.q;
+
+  filters.notch.freq.value = defaultValues.notch.freq;
+  filters.notch.value.textContent = defaultValues.notch.freq + " Hz";
+  filters.notch.q.value = defaultValues.notch.q;
+  filters.notch.qValue.textContent = defaultValues.notch.q;
+
+  filters.lowShelf.freq.value = defaultValues.lowShelf.freq;
+  filters.lowShelf.value.textContent = defaultValues.lowShelf.freq + " Hz";
+  filters.lowShelf.gain.value = defaultValues.lowShelf.gain;
+  filters.lowShelf.gainValue.textContent = defaultValues.lowShelf.gain + " dB";
+
+  filters.highShelf.freq.value = defaultValues.highShelf.freq;
+  filters.highShelf.value.textContent = defaultValues.highShelf.freq + " Hz";
+  filters.highShelf.gain.value = defaultValues.highShelf.gain;
+  filters.highShelf.gainValue.textContent = defaultValues.highShelf.gain + " dB";
+
+  filters.peaking.freq.value = defaultValues.peaking.freq;
+  filters.peaking.value.textContent = defaultValues.peaking.freq + " Hz";
+  filters.peaking.gain.value = defaultValues.peaking.gain;
+  filters.peaking.gainValue.textContent = defaultValues.peaking.gain + " dB";
+  filters.peaking.q.value = defaultValues.peaking.q;
+  filters.peaking.qValue.textContent = defaultValues.peaking.q;
+
+  filters.allPass.freq.value = defaultValues.allPass.freq;
+  filters.allPass.value.textContent = defaultValues.allPass.freq + " Hz";
+  filters.allPass.q.value = defaultValues.allPass.q;
+  filters.allPass.qValue.textContent = defaultValues.allPass.q;
+
+  // Reset effect sliders
+  effects.pan.input.value = defaultValues.pan;
+  effects.pan.text.textContent = defaultValues.pan;
+
+  effects.delay.input.value = defaultValues.delay;
+  effects.delay.text.textContent = defaultValues.delay + "s";
+
+  effects.reverb.input.value = defaultValues.reverb;
+  effects.reverb.text.textContent = defaultValues.reverb;
+
+  effects.distortion.input.value = defaultValues.distortion;
+  effects.distortion.text.textContent = defaultValues.distortion;
+
+  effects.compressor.input.value = defaultValues.compressor;
+  effects.compressor.text.textContent = defaultValues.compressor + " dB";
+
+  effects.phaser.input.value = defaultValues.phaser;
+  effects.phaser.text.textContent = defaultValues.phaser + " Hz";
+
+  effects.flanger.input.value = defaultValues.flanger;
+  effects.flanger.text.textContent = defaultValues.flanger + " Hz";
+
+  effects.chorus.input.value = defaultValues.chorus;
+  effects.chorus.text.textContent = defaultValues.chorus + " Hz";
+
+  effects.tremolo.input.value = defaultValues.tremolo;
+  effects.tremolo.text.textContent = defaultValues.tremolo + " Hz";
+
+  effects.vibrato.input.value = defaultValues.vibrato;
+  effects.vibrato.text.textContent = defaultValues.vibrato + " Hz";
+}
 
 function updateEffectButtons() {
   Object.keys(effects).forEach((name) => {
