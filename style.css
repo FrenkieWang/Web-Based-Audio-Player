@@ -16,8 +16,8 @@ body {
 
 .container {
   width: 100%;
-  max-width: 520px;
-  background: #ffffff;
+  max-width: 1100px;
+  background: #111827;
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
@@ -96,4 +96,49 @@ audio {
 
 .success {
   color: green;
+}
+
+/* audio visualisation */
+.visualisation {
+  margin-top: 32px;
+  text-align: left;
+}
+
+.visualisation h2 {
+  color: #cbd5e1;
+  letter-spacing: 4px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.visual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.visual-card {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 14px;
+  height: 220px;
+}
+
+.visual-card p {
+  color: white;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+canvas {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .visual-grid {
+    grid-template-columns: 1fr;
+  }
 }
