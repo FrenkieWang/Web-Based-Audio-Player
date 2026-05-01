@@ -356,3 +356,32 @@ canvas {
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+/* pitch shift control */
+.pitch-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pitch-control button {
+  width: 44px;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  background: #334155;
+  color: white;
+  cursor: pointer;
+}
+
+.pitch-control button:hover {
+  background: #475569;
+}
+
+.pitch-control span {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}

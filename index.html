@@ -157,6 +157,16 @@
 
       <div class="effect-grid">
         <div class="effect-card">
+          <h3>Pitch Shift</h3>
+          <div class="pitch-control">
+            <button id="pitchDownBtn" type="button">-</button>
+            <span id="pitchValue">0 semitones</span>
+            <button id="pitchUpBtn" type="button">+</button>
+          </div>
+          <button id="pitchBtn">Apply</button>
+        </div>
+
+        <div class="effect-card">
           <h3>Stereo Pan</h3>
           <input id="panValue" type="range" min="-1" max="1" step="0.01" value="0">
           <span id="panText">0</span>
@@ -245,6 +255,7 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+<script src="https://unpkg.com/tone"></script>
+<script src="script.js"></script>
 </body>
 </html>

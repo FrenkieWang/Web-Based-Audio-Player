@@ -5,6 +5,10 @@ const statusText = document.getElementById("status");
 const resetBtn = document.getElementById("resetBtn");
 const stopBtn = document.getElementById("stopBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const pitchDownBtn = document.getElementById("pitchDownBtn");
+const pitchUpBtn = document.getElementById("pitchUpBtn");
+const pitchValue = document.getElementById("pitchValue");
+const pitchBtn = document.getElementById("pitchBtn");
 
 const waveCanvas = document.getElementById("waveCanvas");
 const spectrumCanvas = document.getElementById("spectrumCanvas");
@@ -24,6 +28,9 @@ let enabledEffects = {};
 let lfoNodes = [];
 let isResetting = false;
 
+let pitchSemitones = 0;
+let pitchEnabled = false;
+let pitchShiftNode = null;
 
 let audioArrayBuffer = null;
 
@@ -171,6 +178,45 @@ const effects = {
     text: document.getElementById("vibratoText")
   }
 };
+
+pitchDownBtn.addEventListener("click", () => {
+  pitchSemitones = Math.max(-12, pitchSemitones - 1);
+  updatePitchUI();
+
+  if (pitchShiftNode) {
+    pitchShiftNode.pitch = pitchSemitones;
+  }
+});
+
+pitchUpBtn.addEventListener("click", () => {
+  pitchSemitones = Math.min(12, pitchSemitones + 1);
+  updatePitchUI();
+
+  if (pitchShiftNode) {
+    pitchShiftNode.pitch = pitchSemitones;
+  }
+});
+
+pitchBtn.addEventListener("click", async () => {
+  setupAudioContext();
+
+  if (Tone.getContext().rawContext !== audioContext) {
+    Tone.setContext(new Tone.Context(audioContext));
+  }
+
+  await Tone.start();
+
+  pitchEnabled = !pitchEnabled;
+
+  pitchBtn.textContent = pitchEnabled ? "Cancel" : "Apply";
+  pitchBtn.classList.toggle("active", pitchEnabled);
+
+  rebuildAudioGraph();
+});
+
+function updatePitchUI() {
+  pitchValue.textContent = `${pitchSemitones} semitones`;
+}
 
 Object.keys(effects).forEach((name) => {
   const effect = effects[name];
@@ -454,6 +500,9 @@ function rebuildAudioGraph() {
 
   stopLFOs();
 
+  if (pitchShiftNode) {
+    try { pitchShiftNode.disconnect(); } catch (e) {}
+  }
   try { source.disconnect(); } catch (e) {}
   try { analyser.disconnect(); } catch (e) {}
 
@@ -467,7 +516,31 @@ function rebuildAudioGraph() {
 
   currentNode = applyEffects(currentNode);
 
-  currentNode.connect(analyser);
+  if (pitchEnabled && pitchSemitones !== 0) {
+    if (!pitchShiftNode) {
+      pitchShiftNode = new Tone.PitchShift({
+        pitch: pitchSemitones,
+        wet: 1,
+        windowSize: 0.1
+      });
+    }
+
+    pitchShiftNode.pitch = pitchSemitones;
+
+    Tone.connect(currentNode, pitchShiftNode);
+    pitchShiftNode.connect(analyser);
+  } else {
+    if (pitchShiftNode) {
+      try {
+        pitchShiftNode.disconnect();
+        pitchShiftNode.dispose();
+      } catch (e) {}
+      pitchShiftNode = null;
+    }
+
+    currentNode.connect(analyser);
+  }
+
   analyser.connect(audioContext.destination);
 }
 
@@ -699,9 +772,20 @@ function createReverbImpulse() {
 resetBtn.addEventListener("click", () => {
   isResetting = true;
 
-  // Keep music playing, don't pause or reset position
-  // audioPlayer.pause();  // Removed - keep playing
-  // audioPlayer.currentTime = 0;  // Removed - keep current position
+  pitchEnabled = false;
+  pitchSemitones = 0;
+  updatePitchUI();
+
+  pitchBtn.textContent = "Apply";
+  pitchBtn.classList.remove("active");
+
+  if (pitchShiftNode) {
+    try {
+      pitchShiftNode.disconnect();
+      pitchShiftNode.dispose();
+    } catch (e) {}
+    pitchShiftNode = null;
+  }
 
   activeFilterName = null;
 
@@ -735,6 +819,21 @@ resetBtn.addEventListener("click", () => {
 // Stop button - stops music and resets to initial state
 stopBtn.addEventListener("click", () => {
   isResetting = true;
+
+  pitchEnabled = false;
+  pitchSemitones = 0;
+  updatePitchUI();
+
+  pitchBtn.textContent = "Apply";
+  pitchBtn.classList.remove("active");
+
+  if (pitchShiftNode) {
+    try {
+      pitchShiftNode.disconnect();
+      pitchShiftNode.dispose();
+    } catch (e) {}
+    pitchShiftNode = null;
+  }
 
   // Stop the music
   audioPlayer.pause();
