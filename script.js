@@ -692,8 +692,9 @@ function createReverbImpulse() {
 resetBtn.addEventListener("click", () => {
   isResetting = true;
 
-  audioPlayer.pause();
-  audioPlayer.currentTime = 0;
+  // Keep music playing, don't pause or reset position
+  // audioPlayer.pause();  // Removed - keep playing
+  // audioPlayer.currentTime = 0;  // Removed - keep current position
 
   activeFilterName = null;
 
@@ -719,7 +720,7 @@ resetBtn.addEventListener("click", () => {
 
   resetBtn.disabled = true;
 
-  showStatus("Reset complete. Audio is back to the beginning.", "");
+  showStatus("Reset complete. Filters and effects cleared.", "");
 
   setTimeout(() => {
     isResetting = false;
