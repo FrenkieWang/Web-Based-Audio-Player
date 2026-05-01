@@ -20,6 +20,7 @@ let animationId = null;
 
 let enabledEffects = {};
 let lfoNodes = [];
+let isResetting = false;
 
 const filters = {
   lowPass: {
@@ -205,11 +206,15 @@ audioPlayer.addEventListener("play", async () => {
   setupAudioContext();
   await audioContext.resume();
 
+  resetBtn.disabled = false;
+
   drawVisualisation();
   showStatus("Playing...", "success");
 });
 
 audioPlayer.addEventListener("pause", () => {
+  if (isResetting) return;
+
   showStatus("Paused", "");
 });
 
@@ -661,6 +666,8 @@ function createReverbImpulse() {
 
 // reset button
 resetBtn.addEventListener("click", () => {
+  isResetting = true;
+
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
 
@@ -681,10 +688,17 @@ resetBtn.addEventListener("click", () => {
     rebuildAudioGraph();
   }
 
+  cancelAnimationFrame(animationId);
   clearCanvas(waveCanvas, waveCtx);
   clearCanvas(spectrumCanvas, spectrumCtx);
 
+  resetBtn.disabled = true;
+
   showStatus("Reset complete. Audio is back to the beginning.", "");
+
+  setTimeout(() => {
+    isResetting = false;
+  }, 0);
 });
 
 function updateEffectButtons() {

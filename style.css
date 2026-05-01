@@ -307,3 +307,8 @@ canvas {
 .reset-btn:hover {
   background: #dc2626;
 }
+
+.reset-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
