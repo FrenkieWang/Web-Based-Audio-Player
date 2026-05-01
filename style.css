@@ -290,3 +290,20 @@ canvas {
     grid-template-columns: 1fr;
   }
 }
+
+/* reset button */
+.reset-btn {
+  margin-top: 16px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.reset-btn:hover {
+  background: #dc2626;
+}

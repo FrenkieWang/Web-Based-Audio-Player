@@ -2,6 +2,7 @@ const audioInput = document.getElementById("audioInput");
 const audioPlayer = document.getElementById("audioPlayer");
 const fileInfo = document.getElementById("fileInfo");
 const statusText = document.getElementById("status");
+const resetBtn = document.getElementById("resetBtn");
 
 const waveCanvas = document.getElementById("waveCanvas");
 const spectrumCanvas = document.getElementById("spectrumCanvas");
@@ -656,4 +657,44 @@ function createReverbImpulse() {
   }
 
   return impulse;
+}
+
+// reset button
+resetBtn.addEventListener("click", () => {
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+
+  activeFilterName = null;
+
+  if (activeFilter) {
+    activeFilter.disconnect();
+    activeFilter = null;
+  }
+
+  enabledEffects = {};
+
+  stopLFOs();
+  updateFilterButtons();
+  updateEffectButtons();
+
+  if (audioContext) {
+    rebuildAudioGraph();
+  }
+
+  clearCanvas(waveCanvas, waveCtx);
+  clearCanvas(spectrumCanvas, spectrumCtx);
+
+  showStatus("Reset complete. Audio is back to the beginning.", "");
+});
+
+function updateEffectButtons() {
+  Object.keys(effects).forEach((name) => {
+    const button = effects[name].btn;
+    button.textContent = "Apply";
+    button.classList.remove("active");
+  });
+}
+
+function clearCanvas(canvas, ctx) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
