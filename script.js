@@ -38,13 +38,13 @@ const filters = {
     q: document.getElementById("bandPassQ"),
     qValue: document.getElementById("bandPassQValue")
   },
-  bandStop: {
+  notch: {
     type: "notch",
-    button: document.getElementById("bandStopBtn"),
-    freq: document.getElementById("bandStopFreq"),
-    value: document.getElementById("bandStopValue"),
-    q: document.getElementById("bandStopQ"),
-    qValue: document.getElementById("bandStopQValue")
+    button: document.getElementById("notchBtn"),
+    freq: document.getElementById("notchFreq"),
+    value: document.getElementById("notchValue"),
+    q: document.getElementById("notchQ"),
+    qValue: document.getElementById("notchQValue")
   }
 };
 
@@ -90,7 +90,7 @@ audioPlayer.addEventListener("ended", () => {
   cancelAnimationFrame(animationId);
 });
 
-// Apply filters: low-pass, high-pass, band-pass, band-stop
+// Apply filters: low-pass, high-pass, band-pass, notch
 Object.keys(filters).forEach((key) => {
   const filter = filters[key];
 
