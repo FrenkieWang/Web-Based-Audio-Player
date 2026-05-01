@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audio Upload Player</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Audio Upload Player</h1>
+    <p class="desc">Choose a local audio file and play it directly in the browser.</p>
+
+    <label class="upload-box" for="audioInput">
+      <div class="upload-icon">🎵</div>
+      <div class="upload-text">Click to upload audio</div>
+      <div class="upload-hint">Supports MP3, WAV, OGG, M4A</div>
+    </label>
+
+    <input id="audioInput" type="file" accept="audio/*" />
+
+    <div id="fileInfo" class="file-info"></div>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <div id="status" class="status">No audio file selected</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
