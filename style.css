@@ -36,12 +36,15 @@ h1 {
 }
 
 .upload-box {
+  display: block;
+  width: 100%;
   border: 2px dashed #8b7cf6;
   border-radius: 16px;
   padding: 28px;
   background: #f7f5ff;
   cursor: pointer;
   transition: 0.2s;
+  text-align: center;
 }
 
 .upload-box:hover {
@@ -50,6 +53,8 @@ h1 {
 
 .upload-icon {
   font-size: 40px;
+  line-height: 1;
+  margin-bottom: 10px;
 }
 
 .upload-text {
