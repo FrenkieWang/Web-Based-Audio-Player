@@ -17,6 +17,9 @@ let activeFilter = null;
 let activeFilterName = null;
 let animationId = null;
 
+let enabledEffects = {};
+let lfoNodes = [];
+
 const filters = {
   lowPass: {
     type: "lowpass",
@@ -84,6 +87,93 @@ const filters = {
     qValue: document.getElementById("allPassQValue")
   }
 };
+
+const effects = {
+  pan: {
+    btn: document.getElementById("panBtn"),
+    input: document.getElementById("panValue"),
+    text: document.getElementById("panText")
+  },
+  delay: {
+    btn: document.getElementById("delayBtn"),
+    input: document.getElementById("delayTime"),
+    text: document.getElementById("delayText")
+  },
+  reverb: {
+    btn: document.getElementById("reverbBtn"),
+    input: document.getElementById("reverbMix"),
+    text: document.getElementById("reverbText")
+  },
+  distortion: {
+    btn: document.getElementById("distortionBtn"),
+    input: document.getElementById("distortionAmount"),
+    text: document.getElementById("distortionText")
+  },
+  compressor: {
+    btn: document.getElementById("compressorBtn"),
+    input: document.getElementById("compressorThreshold"),
+    text: document.getElementById("compressorText")
+  },
+  phaser: {
+    btn: document.getElementById("phaserBtn"),
+    input: document.getElementById("phaserRate"),
+    text: document.getElementById("phaserText")
+  },
+  flanger: {
+    btn: document.getElementById("flangerBtn"),
+    input: document.getElementById("flangerRate"),
+    text: document.getElementById("flangerText")
+  },
+  chorus: {
+    btn: document.getElementById("chorusBtn"),
+    input: document.getElementById("chorusRate"),
+    text: document.getElementById("chorusText")
+  },
+  tremolo: {
+    btn: document.getElementById("tremoloBtn"),
+    input: document.getElementById("tremoloRate"),
+    text: document.getElementById("tremoloText")
+  },
+  vibrato: {
+    btn: document.getElementById("vibratoBtn"),
+    input: document.getElementById("vibratoRate"),
+    text: document.getElementById("vibratoText")
+  }
+};
+
+Object.keys(effects).forEach((name) => {
+  const effect = effects[name];
+
+  effect.input.addEventListener("input", () => {
+    let value = effect.input.value;
+
+    if (name === "delay") effect.text.textContent = `${value}s`;
+    else if (name === "compressor") effect.text.textContent = `${value} dB`;
+    else if (
+      name === "phaser" ||
+      name === "flanger" ||
+      name === "chorus" ||
+      name === "tremolo" ||
+      name === "vibrato"
+    ) effect.text.textContent = `${value} Hz`;
+    else effect.text.textContent = value;
+
+    if (audioContext) {
+      rebuildAudioGraph();
+    }
+  });
+
+  effect.btn.addEventListener("click", () => {
+    setupAudioContext();
+
+    enabledEffects[name] = !enabledEffects[name];
+
+    effect.btn.textContent = enabledEffects[name] ? "Cancel" : "Apply";
+    effect.btn.classList.toggle("active", enabledEffects[name]);
+
+    rebuildAudioGraph();
+  });
+});
 
 audioInput.addEventListener("change", function () {
   const file = this.files[0];
@@ -179,21 +269,16 @@ function setupAudioContext() {
 
   source = audioContext.createMediaElementSource(audioPlayer);
 
-  connectWithoutFilter();
+  rebuildAudioGraph();
 }
 
-function connectWithoutFilter() {
-  source.disconnect();
-  analyser.disconnect();
-
-  source.connect(analyser);
-  analyser.connect(audioContext.destination);
-}
 
 function applyFilter(key) {
   const filterConfig = filters[key];
 
-  removeFilter(false);
+  if (activeFilter) {
+    activeFilter.disconnect();
+  }
 
   activeFilter = audioContext.createBiquadFilter();
   activeFilter.type = filterConfig.type;
@@ -207,15 +292,9 @@ function applyFilter(key) {
     activeFilter.gain.value = Number(filterConfig.gain.value);
   }
 
-  source.disconnect();
-  analyser.disconnect();
-
-  source.connect(activeFilter);
-  activeFilter.connect(analyser);
-  analyser.connect(audioContext.destination);
-
   activeFilterName = key;
   updateFilterButtons();
+  rebuildAudioGraph();
 
   showStatus(`${key} filter applied.`, "success");
 }
@@ -230,7 +309,7 @@ function removeFilter(updateButtons = true) {
 
   activeFilterName = null;
 
-  connectWithoutFilter();
+  rebuildAudioGraph();
 
   if (updateButtons) {
     updateFilterButtons();
@@ -331,4 +410,250 @@ function showStatus(message, type) {
   if (type) {
     statusText.classList.add(type);
   }
+}
+
+function rebuildAudioGraph() {
+  if (!audioContext || !source || !analyser) return;
+
+  stopLFOs();
+
+  try { source.disconnect(); } catch (e) {}
+  try { analyser.disconnect(); } catch (e) {}
+
+  let currentNode = source;
+
+  if (activeFilter) {
+    try { activeFilter.disconnect(); } catch (e) {}
+    currentNode.connect(activeFilter);
+    currentNode = activeFilter;
+  }
+
+  currentNode = applyEffects(currentNode);
+
+  currentNode.connect(analyser);
+  analyser.connect(audioContext.destination);
+}
+
+function stopLFOs() {
+  lfoNodes.forEach((osc) => {
+    try {
+      osc.stop();
+      osc.disconnect();
+    } catch (e) {}
+  });
+
+  lfoNodes = [];
+}
+
+function applyEffects(inputNode) {
+  let node = inputNode;
+
+  if (enabledEffects.pan) {
+    const pan = audioContext.createStereoPanner();
+    pan.pan.value = Number(effects.pan.input.value);
+    node.connect(pan);
+    node = pan;
+  }
+
+  if (enabledEffects.delay) {
+    const delay = audioContext.createDelay();
+    const feedback = audioContext.createGain();
+
+    delay.delayTime.value = Number(effects.delay.input.value);
+    feedback.gain.value = 0.35;
+
+    node.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+
+    node = mixDryWet(node, delay, 0.45);
+  }
+
+  if (enabledEffects.reverb) {
+    const convolver = audioContext.createConvolver();
+    convolver.buffer = createReverbImpulse();
+
+    node.connect(convolver);
+
+    node = mixDryWet(node, convolver, Number(effects.reverb.input.value));
+  }
+
+  if (enabledEffects.distortion) {
+    const distortion = audioContext.createWaveShaper();
+    distortion.curve = makeDistortionCurve(
+      Number(effects.distortion.input.value)
+    );
+    distortion.oversample = "4x";
+
+    node.connect(distortion);
+    node = distortion;
+  }
+
+  if (enabledEffects.compressor) {
+    const compressor = audioContext.createDynamicsCompressor();
+
+    compressor.threshold.value = Number(effects.compressor.input.value);
+    compressor.knee.value = 30;
+    compressor.ratio.value = 12;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.25;
+
+    node.connect(compressor);
+    node = compressor;
+  }
+
+  if (enabledEffects.phaser) {
+    const allpass = audioContext.createBiquadFilter();
+    allpass.type = "allpass";
+    allpass.frequency.value = 1000;
+    allpass.Q.value = 1;
+
+    const lfo = audioContext.createOscillator();
+    const depth = audioContext.createGain();
+
+    lfo.frequency.value = Number(effects.phaser.input.value);
+    depth.gain.value = 700;
+
+    lfo.connect(depth);
+    depth.connect(allpass.frequency);
+    lfo.start();
+
+    lfoNodes.push(lfo);
+
+    node.connect(allpass);
+    node = mixDryWet(node, allpass, 0.5);
+  }
+
+  if (enabledEffects.flanger) {
+    const delay = audioContext.createDelay();
+    delay.delayTime.value = 0.005;
+
+    const lfo = audioContext.createOscillator();
+    const depth = audioContext.createGain();
+
+    lfo.frequency.value = Number(effects.flanger.input.value);
+    depth.gain.value = 0.004;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start();
+
+    lfoNodes.push(lfo);
+
+    node.connect(delay);
+    node = mixDryWet(node, delay, 0.5);
+  }
+
+  if (enabledEffects.chorus) {
+    const delay = audioContext.createDelay();
+    delay.delayTime.value = 0.025;
+
+    const lfo = audioContext.createOscillator();
+    const depth = audioContext.createGain();
+
+    lfo.frequency.value = Number(effects.chorus.input.value);
+    depth.gain.value = 0.01;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start();
+
+    lfoNodes.push(lfo);
+
+    node.connect(delay);
+    node = mixDryWet(node, delay, 0.45);
+  }
+
+  if (enabledEffects.tremolo) {
+    const tremoloGain = audioContext.createGain();
+    tremoloGain.gain.value = 0.7;
+
+    const lfo = audioContext.createOscillator();
+    const depth = audioContext.createGain();
+
+    lfo.frequency.value = Number(effects.tremolo.input.value);
+    depth.gain.value = 0.4;
+
+    lfo.connect(depth);
+    depth.connect(tremoloGain.gain);
+    lfo.start();
+
+    lfoNodes.push(lfo);
+
+    node.connect(tremoloGain);
+    node = tremoloGain;
+  }
+
+  if (enabledEffects.vibrato) {
+    const delay = audioContext.createDelay();
+    delay.delayTime.value = 0.01;
+
+    const lfo = audioContext.createOscillator();
+    const depth = audioContext.createGain();
+
+    lfo.frequency.value = Number(effects.vibrato.input.value);
+    depth.gain.value = 0.006;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start();
+
+    lfoNodes.push(lfo);
+
+    node.connect(delay);
+    node = delay;
+  }
+
+  return node;
+}
+
+function mixDryWet(dryInput, wetInput, wetAmount) {
+  const output = audioContext.createGain();
+  const dryGain = audioContext.createGain();
+  const wetGain = audioContext.createGain();
+
+  dryGain.gain.value = 1 - wetAmount;
+  wetGain.gain.value = wetAmount;
+
+  dryInput.connect(dryGain);
+  wetInput.connect(wetGain);
+
+  dryGain.connect(output);
+  wetGain.connect(output);
+
+  return output;
+}
+
+function makeDistortionCurve(amount) {
+  const samples = 44100;
+  const curve = new Float32Array(samples);
+  const deg = Math.PI / 180;
+
+  for (let i = 0; i < samples; i++) {
+    const x = (i * 2) / samples - 1;
+    curve[i] =
+      ((3 + amount) * x * 20 * deg) /
+      (Math.PI + amount * Math.abs(x));
+  }
+
+  return curve;
+}
+
+function createReverbImpulse() {
+  const length = audioContext.sampleRate * 2;
+  const impulse = audioContext.createBuffer(
+    2,
+    length,
+    audioContext.sampleRate
+  );
+
+  for (let channel = 0; channel < 2; channel++) {
+    const data = impulse.getChannelData(channel);
+
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
+    }
+  }
+
+  return impulse;
 }

@@ -143,7 +143,7 @@ canvas {
   }
 }
 
-/* Apply filters: low-pass, high-pass, band-pass, notch */
+/* Apply filters */
 .filter-section {
   margin-top: 32px;
   text-align: left;
@@ -217,6 +217,76 @@ canvas {
 
 @media (max-width: 520px) {
   .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Apply Effects */
+.effect-section {
+  margin-top: 32px;
+  text-align: left;
+}
+
+.effect-section h2 {
+  color: #cbd5e1;
+  letter-spacing: 4px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.effect-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+
+.effect-card {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 18px;
+  color: white;
+}
+
+.effect-card h3 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.effect-card input[type="range"] {
+  width: 100%;
+}
+
+.effect-card span {
+  display: block;
+  margin: 8px 0 12px;
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.effect-card button {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.effect-card button.active {
+  background: #dc2626;
+}
+
+@media (max-width: 1100px) {
+  .effect-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .effect-grid {
     grid-template-columns: 1fr;
   }
 }
