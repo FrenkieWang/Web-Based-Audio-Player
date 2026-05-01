@@ -4,6 +4,7 @@ const fileInfo = document.getElementById("fileInfo");
 const statusText = document.getElementById("status");
 const resetBtn = document.getElementById("resetBtn");
 const stopBtn = document.getElementById("stopBtn");
+const downloadBtn = document.getElementById("downloadBtn");
 
 const waveCanvas = document.getElementById("waveCanvas");
 const spectrumCanvas = document.getElementById("spectrumCanvas");
@@ -22,6 +23,9 @@ let animationId = null;
 let enabledEffects = {};
 let lfoNodes = [];
 let isResetting = false;
+
+
+let audioArrayBuffer = null;
 
 // Default values for all filters and effects
 const defaultValues = {
@@ -202,7 +206,7 @@ Object.keys(effects).forEach((name) => {
   });
 });
 
-audioInput.addEventListener("change", function () {
+audioInput.addEventListener("change", async function () {
   const file = this.files[0];
 
   if (!file) return;
@@ -217,6 +221,8 @@ audioInput.addEventListener("change", function () {
   }
 
   currentAudioUrl = URL.createObjectURL(file);
+  audioArrayBuffer = await file.arrayBuffer();
+  downloadBtn.disabled = false;
   audioPlayer.src = currentAudioUrl;
   audioPlayer.style.display = "block";
 
@@ -848,4 +854,323 @@ function updateEffectButtons() {
 
 function clearCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// download button
+downloadBtn.addEventListener("click", async () => {
+  if (!audioArrayBuffer) {
+    showStatus("No audio file to export.", "error");
+    return;
+  }
+
+  showStatus("Rendering processed audio...", "success");
+
+  try {
+    const processedBuffer = await renderProcessedAudio();
+    const wavBlob = audioBufferToWav(processedBuffer);
+
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "processed-audio.wav";
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    showStatus("Processed audio downloaded.", "success");
+  } catch (error) {
+    console.error(error);
+    showStatus("Failed to export processed audio.", "error");
+  }
+});
+
+async function renderProcessedAudio() {
+  const arrayBufferCopy = audioArrayBuffer.slice(0);
+
+  const tempContext = new AudioContext();
+  const decodedBuffer = await tempContext.decodeAudioData(arrayBufferCopy);
+  await tempContext.close();
+
+  const offlineContext = new OfflineAudioContext(
+    decodedBuffer.numberOfChannels,
+    decodedBuffer.length,
+    decodedBuffer.sampleRate
+  );
+
+  const sourceNode = offlineContext.createBufferSource();
+  sourceNode.buffer = decodedBuffer;
+
+  let currentNode = sourceNode;
+
+  if (activeFilterName) {
+    const filterConfig = filters[activeFilterName];
+
+    const offlineFilter = offlineContext.createBiquadFilter();
+    offlineFilter.type = filterConfig.type;
+    offlineFilter.frequency.value = Number(filterConfig.freq.value);
+
+    if (filterConfig.q) {
+      offlineFilter.Q.value = Number(filterConfig.q.value);
+    }
+
+    if (filterConfig.gain) {
+      offlineFilter.gain.value = Number(filterConfig.gain.value);
+    }
+
+    currentNode.connect(offlineFilter);
+    currentNode = offlineFilter;
+  }
+
+  currentNode = applyOfflineEffects(currentNode, offlineContext);
+
+  currentNode.connect(offlineContext.destination);
+
+  sourceNode.start(0);
+
+  return await offlineContext.startRendering();
+}
+
+function applyOfflineEffects(inputNode, context) {
+  let node = inputNode;
+
+  if (enabledEffects.pan) {
+    const pan = context.createStereoPanner();
+    pan.pan.value = Number(effects.pan.input.value);
+    node.connect(pan);
+    node = pan;
+  }
+
+  if (enabledEffects.delay) {
+    const delay = context.createDelay();
+    const feedback = context.createGain();
+
+    delay.delayTime.value = Number(effects.delay.input.value);
+    feedback.gain.value = 0.35;
+
+    node.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+
+    node = offlineMixDryWet(node, delay, 0.45, context);
+  }
+
+  if (enabledEffects.reverb) {
+    const convolver = context.createConvolver();
+    convolver.buffer = createOfflineReverbImpulse(context);
+
+    node.connect(convolver);
+
+    node = offlineMixDryWet(
+      node,
+      convolver,
+      Number(effects.reverb.input.value),
+      context
+    );
+  }
+
+  if (enabledEffects.distortion) {
+    const distortion = context.createWaveShaper();
+
+    distortion.curve = makeDistortionCurve(
+      Number(effects.distortion.input.value)
+    );
+    distortion.oversample = "4x";
+
+    node.connect(distortion);
+    node = distortion;
+  }
+
+  if (enabledEffects.compressor) {
+    const compressor = context.createDynamicsCompressor();
+
+    compressor.threshold.value = Number(effects.compressor.input.value);
+    compressor.knee.value = 30;
+    compressor.ratio.value = 12;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.25;
+
+    node.connect(compressor);
+    node = compressor;
+  }
+
+  if (enabledEffects.phaser) {
+    const allpass = context.createBiquadFilter();
+    allpass.type = "allpass";
+    allpass.frequency.value = 1000;
+    allpass.Q.value = 1;
+
+    const lfo = context.createOscillator();
+    const depth = context.createGain();
+
+    lfo.frequency.value = Number(effects.phaser.input.value);
+    depth.gain.value = 700;
+
+    lfo.connect(depth);
+    depth.connect(allpass.frequency);
+    lfo.start(0);
+
+    node.connect(allpass);
+    node = offlineMixDryWet(node, allpass, 0.5, context);
+  }
+
+  if (enabledEffects.flanger) {
+    const delay = context.createDelay();
+    delay.delayTime.value = 0.005;
+
+    const lfo = context.createOscillator();
+    const depth = context.createGain();
+
+    lfo.frequency.value = Number(effects.flanger.input.value);
+    depth.gain.value = 0.004;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start(0);
+
+    node.connect(delay);
+    node = offlineMixDryWet(node, delay, 0.5, context);
+  }
+
+  if (enabledEffects.chorus) {
+    const delay = context.createDelay();
+    delay.delayTime.value = 0.025;
+
+    const lfo = context.createOscillator();
+    const depth = context.createGain();
+
+    lfo.frequency.value = Number(effects.chorus.input.value);
+    depth.gain.value = 0.01;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start(0);
+
+    node.connect(delay);
+    node = offlineMixDryWet(node, delay, 0.45, context);
+  }
+
+  if (enabledEffects.tremolo) {
+    const tremoloGain = context.createGain();
+    tremoloGain.gain.value = 0.7;
+
+    const lfo = context.createOscillator();
+    const depth = context.createGain();
+
+    lfo.frequency.value = Number(effects.tremolo.input.value);
+    depth.gain.value = 0.4;
+
+    lfo.connect(depth);
+    depth.connect(tremoloGain.gain);
+    lfo.start(0);
+
+    node.connect(tremoloGain);
+    node = tremoloGain;
+  }
+
+  if (enabledEffects.vibrato) {
+    const delay = context.createDelay();
+    delay.delayTime.value = 0.01;
+
+    const lfo = context.createOscillator();
+    const depth = context.createGain();
+
+    lfo.frequency.value = Number(effects.vibrato.input.value);
+    depth.gain.value = 0.006;
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+    lfo.start(0);
+
+    node.connect(delay);
+    node = delay;
+  }
+
+  return node;
+}
+
+function offlineMixDryWet(dryInput, wetInput, wetAmount, context) {
+  const output = context.createGain();
+  const dryGain = context.createGain();
+  const wetGain = context.createGain();
+
+  dryGain.gain.value = 1 - wetAmount;
+  wetGain.gain.value = wetAmount;
+
+  dryInput.connect(dryGain);
+  wetInput.connect(wetGain);
+
+  dryGain.connect(output);
+  wetGain.connect(output);
+
+  return output;
+}
+
+function createOfflineReverbImpulse(context) {
+  const length = context.sampleRate * 2;
+  const impulse = context.createBuffer(2, length, context.sampleRate);
+
+  for (let channel = 0; channel < 2; channel++) {
+    const data = impulse.getChannelData(channel);
+
+    for (let i = 0; i < length; i++) {
+      data[i] =
+        (Math.random() * 2 - 1) *
+        Math.pow(1 - i / length, 2);
+    }
+  }
+
+  return impulse;
+}
+
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 2 + 44;
+
+  const arrayBuffer = new ArrayBuffer(length);
+  const view = new DataView(arrayBuffer);
+
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, length - 8, true);
+  writeString(view, 8, "WAVE");
+
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  view.setUint16(32, numChannels * 2, true);
+  view.setUint16(34, 16, true);
+
+  writeString(view, 36, "data");
+  view.setUint32(40, length - 44, true);
+
+  let offset = 44;
+
+  for (let i = 0; i < buffer.length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      const sample = Math.max(
+        -1,
+        Math.min(1, buffer.getChannelData(channel)[i])
+      );
+
+      view.setInt16(
+        offset,
+        sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+        true
+      );
+
+      offset += 2;
+    }
+  }
+
+  return new Blob([view], { type: "audio/wav" });
+}
+
+function writeString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
 }

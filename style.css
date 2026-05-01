@@ -334,3 +334,25 @@ canvas {
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+/* download button */
+.download-btn {
+  margin-top: 16px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  background: #8b5cf6;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.download-btn:hover {
+  background: #7c3aed;
+}
+
+.download-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
