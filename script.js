@@ -3,6 +3,7 @@ const audioPlayer = document.getElementById("audioPlayer");
 const fileInfo = document.getElementById("fileInfo");
 const statusText = document.getElementById("status");
 const resetBtn = document.getElementById("resetBtn");
+const stopBtn = document.getElementById("stopBtn");
 
 const waveCanvas = document.getElementById("waveCanvas");
 const spectrumCanvas = document.getElementById("spectrumCanvas");
@@ -231,6 +232,7 @@ audioPlayer.addEventListener("play", async () => {
   await audioContext.resume();
 
   resetBtn.disabled = false;
+  stopBtn.disabled = false;
 
   drawVisualisation();
   showStatus("Playing...", "success");
@@ -721,6 +723,46 @@ resetBtn.addEventListener("click", () => {
   resetBtn.disabled = true;
 
   showStatus("Reset complete. Filters and effects cleared.", "");
+
+  setTimeout(() => {
+    isResetting = false;
+  }, 0);
+});
+
+// Stop button - stops music and resets to initial state
+stopBtn.addEventListener("click", () => {
+  isResetting = true;
+
+  // Stop the music
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+
+  activeFilterName = null;
+
+  if (activeFilter) {
+    activeFilter.disconnect();
+    activeFilter = null;
+  }
+
+  enabledEffects = {};
+
+  stopLFOs();
+  updateFilterButtons();
+  updateEffectButtons();
+  resetSliderValues(); // Reset all slider values to default
+
+  if (audioContext) {
+    rebuildAudioGraph();
+  }
+
+  cancelAnimationFrame(animationId);
+  clearCanvas(waveCanvas, waveCtx);
+  clearCanvas(spectrumCanvas, spectrumCtx);
+
+  resetBtn.disabled = true;
+  stopBtn.disabled = true;
+
+  showStatus("Stopped. Audio reset to beginning.", "");
 
   setTimeout(() => {
     isResetting = false;

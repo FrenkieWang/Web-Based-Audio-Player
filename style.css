@@ -298,17 +298,39 @@ canvas {
   border: none;
   border-radius: 10px;
   padding: 12px;
-  background: #ef4444;
+  background: #22c55e;
   color: white;
   cursor: pointer;
   font-size: 15px;
 }
 
 .reset-btn:hover {
-  background: #dc2626;
+  background: #16a34a;
 }
 
 .reset-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* stop button */
+.stop-btn {
+  margin-top: 16px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.stop-btn:hover {
+  background: #dc2626;
+}
+
+.stop-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
