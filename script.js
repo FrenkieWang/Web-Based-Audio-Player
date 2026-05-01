@@ -231,7 +231,6 @@ audioPlayer.addEventListener("play", async () => {
   setupAudioContext();
   await audioContext.resume();
 
-  resetBtn.disabled = false;
   stopBtn.disabled = false;
 
   drawVisualisation();
@@ -720,8 +719,6 @@ resetBtn.addEventListener("click", () => {
   clearCanvas(waveCanvas, waveCtx);
   clearCanvas(spectrumCanvas, spectrumCtx);
 
-  resetBtn.disabled = true;
-
   showStatus("Reset complete. Filters and effects cleared.", "");
 
   setTimeout(() => {
@@ -759,7 +756,6 @@ stopBtn.addEventListener("click", () => {
   clearCanvas(waveCanvas, waveCtx);
   clearCanvas(spectrumCanvas, spectrumCtx);
 
-  resetBtn.disabled = true;
   stopBtn.disabled = true;
 
   showStatus("Stopped. Audio reset to beginning.", "");
