@@ -24,6 +24,63 @@
     <audio id="audioPlayer" controls></audio>
 
     <div id="status" class="status">No audio file selected</div>
+
+    <section class="filter-section">
+      <h2>FILTER</h2>
+
+      <div class="filter-grid">
+        <div class="filter-card">
+          <h3>low-pass</h3>
+          <label>
+            Frequency
+            <input id="lowPassFreq" type="range" min="50" max="12000" value="1000">
+            <span id="lowPassValue">1000 Hz</span>
+          </label>
+          <button id="lowPassBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>high-pass</h3>
+          <label>
+            Frequency
+            <input id="highPassFreq" type="range" min="20" max="8000" value="800">
+            <span id="highPassValue">800 Hz</span>
+          </label>
+          <button id="highPassBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>band-pass</h3>
+          <label>
+            Frequency
+            <input id="bandPassFreq" type="range" min="50" max="12000" value="1500">
+            <span id="bandPassValue">1500 Hz</span>
+          </label>
+          <label>
+            Q
+            <input id="bandPassQ" type="range" min="1" max="30" value="5">
+            <span id="bandPassQValue">5</span>
+          </label>
+          <button id="bandPassBtn">Apply</button>
+        </div>
+
+        <div class="filter-card">
+          <h3>band-stop</h3>
+          <label>
+            Frequency
+            <input id="bandStopFreq" type="range" min="50" max="12000" value="1500">
+            <span id="bandStopValue">1500 Hz</span>
+          </label>
+          <label>
+            Q
+            <input id="bandStopQ" type="range" min="0.1" max="30" step="0.1" value="1">
+            <span id="bandStopQValue">1</span>
+          </label>
+          <button id="bandStopBtn">Apply</button>
+        </div>
+      </div>
+    </section>
+
     <div class="visualisation">
         <h2>VISUALISATION</h2>
 

@@ -142,3 +142,81 @@ canvas {
     grid-template-columns: 1fr;
   }
 }
+
+/* Apply filters: low-pass, high-pass, band-pass, band-stop */
+.filter-section {
+  margin-top: 32px;
+  text-align: left;
+}
+
+.filter-section h2 {
+  color: #cbd5e1;
+  letter-spacing: 4px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.filter-card {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 18px;
+  color: white;
+}
+
+.filter-card h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.filter-card label {
+  display: block;
+  font-size: 13px;
+  color: #cbd5e1;
+  margin-bottom: 14px;
+}
+
+.filter-card input[type="range"] {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.filter-card span {
+  display: block;
+  margin-top: 4px;
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.filter-card button {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.filter-card button.active {
+  background: #dc2626;
+}
+
+@media (max-width: 900px) {
+  .filter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
