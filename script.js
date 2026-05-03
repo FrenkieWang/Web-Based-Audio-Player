@@ -1009,25 +1009,46 @@ async function renderProcessedAudio() {
     offlineFilter.type = filterConfig.type;
     offlineFilter.frequency.value = Number(filterConfig.freq.value);
 
-    if (filterConfig.q) {
-      offlineFilter.Q.value = Number(filterConfig.q.value);
-    }
-
-    if (filterConfig.gain) {
-      offlineFilter.gain.value = Number(filterConfig.gain.value);
-    }
+    if (filterConfig.q) offlineFilter.Q.value = Number(filterConfig.q.value);
+    if (filterConfig.gain) offlineFilter.gain.value = Number(filterConfig.gain.value);
 
     currentNode.connect(offlineFilter);
     currentNode = offlineFilter;
   }
 
   currentNode = applyOfflineEffects(currentNode, offlineContext);
-
   currentNode.connect(offlineContext.destination);
 
   sourceNode.start(0);
 
-  return await offlineContext.startRendering();
+  let renderedBuffer = await offlineContext.startRendering();
+
+  if (pitchEnabled && pitchSemitones !== 0) {
+    renderedBuffer = await renderPitchShiftOffline(renderedBuffer, pitchSemitones);
+  }
+
+  return renderedBuffer;
+}
+
+async function renderPitchShiftOffline(audioBuffer, semitones) {
+  const duration = audioBuffer.duration;
+  const channels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+
+  const toneBuffer = await Tone.Offline(() => {
+    const player = new Tone.Player(audioBuffer);
+
+    const pitchShift = new Tone.PitchShift({
+      pitch: semitones,
+      wet: 1,
+      windowSize: 0.1
+    }).toDestination();
+
+    player.connect(pitchShift);
+    player.start(0);
+  }, duration, channels, sampleRate);
+
+  return toneBuffer.get();
 }
 
 function applyOfflineEffects(inputNode, context) {
