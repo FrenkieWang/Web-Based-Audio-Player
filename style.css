@@ -291,6 +291,84 @@ canvas {
   }
 }
 
+/* Pitch Shift Section */
+.pitch-section {
+  margin-top: 32px;
+  text-align: left;
+}
+
+.pitch-section h2 {
+  color: #cbd5e1;
+  letter-spacing: 4px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.pitch-grid {
+  display: flex;
+  justify-content: center;
+}
+
+.pitch-card {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 18px;
+  color: white;
+  width: 100%;
+}
+
+.pitch-card h3 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.pitch-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pitch-control span {
+  flex: none !important;
+  text-align: center;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.pitch-control button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #334155;
+  color: white;
+  cursor: pointer;
+}
+
+.pitch-control button:hover {
+  background: #475569;
+}
+
+.pitch-card > button {
+  width: 50%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+.pitch-card > button.active {
+  background: #dc2626;
+}
+
 /* reset button */
 .reset-btn {
   margin-top: 16px;
@@ -361,7 +439,7 @@ canvas {
 .pitch-control {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center
   gap: 8px;
   margin-bottom: 12px;
 }
